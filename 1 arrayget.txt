@@ -1,0 +1,86 @@
+data segment
+msg db 10,13, "Hello World$"
+msg1 db 10,13, "Enter an array of 5 numbers$"
+msg2 db 10,13, "Enter Number$"
+msg3 db 10,13, "Array is$"
+n db 30h
+n1 db 30h
+arr db 05 dup(0)
+data ends
+code segment
+assume cs: code, ds:data
+start: mov ax, data
+mov ds, ax
+lea dx, msg
+mov ah, 09h
+int 21h
+mov si, 00h
+lea dx, msg1
+mov ah,09h
+int 21h
+up: lea dx, msg2
+mov ah,09h
+int 21h
+call take
+mov [arr+si], bh
+inc si
+inc [n]
+cmp [n], 34h
+jbe up
+lea dx, msg3
+mov ah,09h
+int 21h
+mov si, 00h
+up12: mov bh, [arr+si]
+call display
+inc si
+inc [n1]
+cmp [n1], 34h
+jbe up12
+mov ah, 4ch
+int 21h
+take proc near
+mov ah, 01h
+int 21h
+cmp al, 39h
+jbe down
+sub al, 07h
+down : sub al, 30h
+mov cl, 04h
+rol al, cl
+mov bh, al
+mov ah, 01h
+int 21h
+cmp al, 39h
+jbe down1
+sub al, 07h
+down1 : sub al, 30h
+add bh, al
+ret
+take endp
+display proc near
+mov ch, bh
+and ch, 0f0h
+mov cl, 04h
+rol ch, cl
+cmp ch, 09h
+jbe down4
+add ch, 07h
+down4 :
+add ch, 30h
+mov dl, ch
+mov ah, 02h
+int 21h
+mov ch, bh
+and ch, 0fh
+cmp ch, 09h
+jbe down5
+add ch, 07h
+down5 : add ch, 30h
+mov dl, ch
+mov ah, 02h
+int 21h
+ret
+display endp
+code ends
+end start

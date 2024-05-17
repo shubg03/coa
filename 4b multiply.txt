@@ -1,0 +1,51 @@
+data segment
+no1 db 10h
+no2 db 20h
+msg db 10,13, "MULTIPLICATION IS: $"
+ans dw ?
+data ends
+code segment
+assume cs:code, ds: data
+start:
+mov ax, data
+mov ds, ax
+mov al, [no1]
+mov bl, [no2]
+mul bl
+mov [ans], ax
+lea dx, msg
+mov ah, 09h
+int 21h
+mov bx, [ans]
+call display
+mov bh,bl
+call display
+mov ah,04ch
+int 21h
+display proc near
+mov ch, bh
+and ch, 0F0h
+mov cl, 04h
+rol ch, cl
+cmp ch, 09h
+jbe down2
+add ch, 07h
+down2:
+add ch, 30h
+mov dl, ch
+mov ah, 02h
+int 21h
+mov ch, bh
+and ch, 0Fh
+cmp ch, 09h
+jbe down3
+add ch, 07h
+down3:
+add ch, 30h
+mov dl, ch
+mov ah, 02h
+int 21h
+ret
+display endp
+code ends
+end start
