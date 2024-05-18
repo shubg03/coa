@@ -1,0 +1,195 @@
+ data segment
+ msg1 db 10,13, "Enter your number: $"
+ msg2 db 10,13, "*****MENU*****$"
+ msg3 db 10,13, "1. Convert to Hex $"
+ msg4 db 10,13, "2. Convert to BCD $"
+ msg5 db 10,13, "3. Exit $"
+ msg6 db 10,13, "Enter your choice: $"
+ msg7 db 10,13, "Output number is: $"
+ msg8 db 10,13, "Program terminated. $"
+ result dw ?
+ ans db 05 dup(0)
+ data ends
+ prompt macro msg
+ mov ah, 09h
+ lea dx, msg
+ int 21h
+ endm
+ code segment
+ assume cs: code, ds: data
+ start: mov ax,data
+ mov ds,ax
+ prompt msg2
+ prompt msg3
+ prompt msg4
+ prompt msg5
+ prompt msg6
+ mov ah, 01h
+ int 21h
+ mov dl, al
+ cmp dl, 31h
+ jbe call1
+ cmp dl, 32h
+ jbe call2
+ prompt msg8
+ mov ah, 4ch
+ int 21h
+ call1: prompt msg1
+ call bcd_hex
+ prompt msg7
+ call display
+ prompt msg8
+ mov ah, 4ch
+ int 21h
+call2: prompt msg1
+ call hex_bcd
+ prompt msg8
+ mov ah, 4ch
+ int 21h
+ bcd_hex proc near
+ mov ah, 01h
+ int 21h
+ sub al, 30h
+ mov cx, 2710h
+ mov ah, 00h
+ mul cx
+ add [result], ax
+ mov ah, 01h
+ int 21h
+ sub al, 30h
+ mov cx, 03E8h
+ mov ah, 00h
+ mul cx
+ add [result], ax
+ mov ah, 01h
+ int 21h
+ sub al, 30h
+ mov cx, 0064h
+ mov ah, 00h
+ mul cx
+ add [result], ax
+ mov ah, 01h
+ int 21h
+ sub al, 30h
+ mov cx, 000Ah
+ mov ah, 00h
+ mul cx
+ add [result], ax
+ mov ah, 01h
+ int 21h
+ sub al, 30h
+ mov ah, 00h
+ add [result], ax
+ mov bx, [result]
+ ret
+ bcd_hex endp
+hex_bcd proc near
+ call take
+ mov ax, bx
+ mov dx, 0000h
+ mov si, 0000h
+ mov cl, 00h
+ mov bx, 000Ah
+ up1: div bx
+ mov [ans+si], dl
+ inc si
+ inc cl
+ mov dx,0000h
+ cmp ax, 04h
+ jnc up1
+ mov [ans+si],al
+ inc cl
+ prompt msg7
+ up2:mov dx,0000h
+ mov dl, [ans+si]
+ add dl, 30h
+ mov ah, 02h
+ int 21h
+ dec si
+ dec cl
+ jnz up2
+ ret
+ hex_bcd endp
+ take proc near
+ mov ah, 01h
+ int 21h
+ cmp al, 39h
+ jbe down
+ sub al, 07h
+ down : sub al, 30h
+ mov cl, 04h
+ rol al, cl
+ mov bh, al
+ mov ah, 01h
+ int 21h
+ cmp al, 39h
+ jbe down1
+ sub al, 07h
+down1 : sub al, 30h
+ add bh, al
+ mov ah, 01h
+ int 21h
+ cmp al, 39h
+ jbe down2
+ sub al, 07h
+ down2 : sub al, 30h
+ mov cl, 04
+ rol al, cl
+ mov bl, al
+ mov ah, 01h
+ int 21h
+ cmp al, 39h
+ jbe down3
+ sub al, 07h
+ down3 : sub al, 30h
+ add bl, al
+ ret
+ take endp
+ display proc near
+ mov ch, bh
+ and ch, 0f0h
+ mov cl, 04h
+ rol ch, cl
+ cmp ch, 09h
+ jbe down4
+ add ch, 07h
+ down4 :
+ add ch, 30h
+ mov dl, ch
+ mov ah, 02h
+ int 21h
+ mov ch, bh
+ and ch, 0fh
+ cmp ch, 09h
+ jbe down5
+ add ch, 07h
+ down5 : add ch, 30h
+ mov dl, ch
+ mov ah, 02h
+ int 21h
+ mov bh, bl
+ mov ch, bh
+ and ch, 0f0h
+mov cl, 04h
+ rol ch, cl
+ cmp ch, 09h
+ jbe down6
+ add ch, 07h
+ down6 :
+ add ch, 30h
+ mov dl, ch
+ mov ah, 02h
+ int 21h
+ mov ch, bh
+ and ch, 0fh
+ cmp ch, 09h
+ jbe down7
+ add ch, 07h
+ down7 : add ch, 30h
+ mov dl, ch
+ mov ah, 02h
+ int 21h
+ ret
+ display endp
+ code ends
+ end start
